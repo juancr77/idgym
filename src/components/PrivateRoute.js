@@ -4,23 +4,28 @@ import { supabase } from '../supabase';
 
 const PrivateRoute = ({ children }) => {
   const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Obtener la sesión del usuario
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-    });
+      setLoading(false);
+    };
 
-    // Escuchar cambios en la autenticación
+    fetchSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
-    // Limpiar la suscripción al desmontar el componente
     return () => subscription.unsubscribe();
   }, []);
 
-  // Si no hay usuario autenticado, redirigir a la página de inicio de sesión
+  if (loading) {
+    return <p>Cargando...</p>; // Muestra un mensaje de carga
+  }
+
   return session ? children : <Navigate to="/" />;
 };
 

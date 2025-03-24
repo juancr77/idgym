@@ -1,15 +1,11 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client'; // Para React 18
-import App from './App';
+import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import App from './App';
 
-// Selecciona el contenedor raíz
 const container = document.getElementById('root');
-
-// Crea una raíz
 const root = createRoot(container);
 
-// Renderiza la aplicación
 root.render(
   <BrowserRouter>
     <App />

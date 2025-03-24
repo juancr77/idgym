@@ -5,18 +5,29 @@ import { supabase } from '../supabase';
 const DayView = () => {
   const { day } = useParams();
   const [exercises, setExercises] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Cargar ejercicios del día
   useEffect(() => {
     const fetchExercises = async () => {
-      const { data, error } = await supabase
-        .from('exercises')
-        .select('*')
-        .eq('day', day);
+      setLoading(true);
+      setError('');
 
-      if (error) console.error('Error al cargar ejercicios:', error);
-      else setExercises(data);
+      try {
+        const { data, error } = await supabase
+          .from('exercises')
+          .select('*')
+          .eq('day', day);
+
+        if (error) throw error;
+        setExercises(data);
+      } catch (error) {
+        console.error('Error al cargar ejercicios:', error.message);
+        setError('Error al cargar los ejercicios. Inténtalo de nuevo.');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchExercises();
@@ -25,22 +36,30 @@ const DayView = () => {
   return (
     <div>
       <h1>{day}</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <button onClick={() => navigate(`/day/${day}/add-exercise`)}>Agregar Ejercicio</button>
-      <ul>
-        {exercises.map((exercise) => (
-          <li key={exercise.id}>
-            {exercise.name}
-            <ul>
-              {exercise.videos.map((video, index) => (
-                <li key={index}>
-                  <a href={video} target="_blank" rel="noopener noreferrer">Ver Video {index + 1}</a>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
       <button onClick={() => navigate('/week')}>Volver a la Semana</button>
+
+      {loading ? (
+        <p>Cargando ejercicios...</p>
+      ) : exercises.length === 0 ? (
+        <p>No hay ejercicios para este día.</p>
+      ) : (
+        <ul>
+          {exercises.map((exercise) => (
+            <li key={exercise.id}>
+              <h3>{exercise.name}</h3>
+              <ul>
+                {exercise.videos.map((video, index) => (
+                  <li key={index}>
+                    <a href={video} target="_blank" rel="noopener noreferrer">Ver Video {index + 1}</a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

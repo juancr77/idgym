@@ -11,7 +11,7 @@ const AddExercise = () => {
   const navigate = useNavigate();
 
   const handleVideoChange = (e) => {
-    const files = Array.from(e.target.files); // Convertir FileList a Array
+    const files = Array.from(e.target.files);
     setVideos(files);
   };
 
@@ -21,18 +21,15 @@ const AddExercise = () => {
     setError('');
 
     try {
-      // Verificar que el usuario esté autenticado
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('Debes iniciar sesión para agregar ejercicios.');
       }
 
-      // Verificar que se haya ingresado un nombre y al menos un video
       if (!exerciseName || videos.length === 0) {
         throw new Error('Por favor, ingresa un nombre y selecciona al menos un video.');
       }
 
-      // Subir cada video a Supabase Storage
       const videoURLs = await Promise.all(
         videos.map(async (video) => {
           const filePath = `exercises/${Date.now()}_${video.name}`;
@@ -42,7 +39,6 @@ const AddExercise = () => {
 
           if (error) throw error;
 
-          // Obtener la URL del video
           const { data } = supabase.storage
             .from('videos')
             .getPublicUrl(filePath);
@@ -51,27 +47,25 @@ const AddExercise = () => {
         })
       );
 
-      // Guardar el ejercicio en la base de datos
       const { error } = await supabase
         .from('exercises')
         .insert([{ name: exerciseName, day: day, videos: videoURLs }]);
 
       if (error) throw error;
 
-      // Redirigir a la vista del día después de agregar el ejercicio
       navigate(`/day/${day}`);
     } catch (error) {
       console.error('Error al agregar el ejercicio:', error);
-      setError(error.message); // Mostrar mensaje de error al usuario
+      setError(error.message);
     } finally {
-      setUploading(false); // Desactivar el estado de carga
+      setUploading(false);
     }
   };
 
   return (
     <div>
       <h1>Agregar Ejercicio para {day}</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>} {/* Mostrar mensaje de error */}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
         <input
           type="text"
